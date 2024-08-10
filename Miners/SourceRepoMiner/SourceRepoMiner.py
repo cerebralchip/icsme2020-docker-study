@@ -18,7 +18,7 @@ class APIClient(object):
         self.__dict__.update(**config_options)
         self.APIPoolURL = os.getenv('APIPOOL')
         if (self.APIPoolURL == None):
-            self.APIPoolURL = 'http://$your-webapp-url:8000/authtoken/'
+            self.APIPoolURL = 'http://$localhost:8000/authtoken/'
         if (os.path.exists('token.json')):
             with open('token.json', 'r') as jsonfile:
                 previous_token = json.load(jsonfile)
@@ -149,7 +149,7 @@ class SourceRepoMiner(object):
     def __init__(self, **config_options):
         self.__dict__.update(**config_options)
 
-        self.WebAppURL = 'http://$your-webapp-url:8000'
+        self.WebAppURL = 'http://$localhost:8000'
         self.ImageAndRepoInfoCrawlerTaskURL = self.WebAppURL + '/image_and_repo_info_crawler_task/'
         self.RepositoryPOSTURL = self.WebAppURL + '/repository'
         self.RepositoryQueryURL = self.WebAppURL + '/query_repository/'

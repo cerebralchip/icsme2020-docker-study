@@ -4,7 +4,10 @@ import django
 import itertools
 import string
 
-sys.path.append('../')
+# Dynamically find the project root directory (assuming the script is in a subdirectory of the project)
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(project_root)
+
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'webapp.settings')
 django.setup()
 

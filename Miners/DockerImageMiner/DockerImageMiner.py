@@ -10,9 +10,9 @@ class DockerImageMiner:
     def __init__(self):
         self.DockerHubSearchAPIURL="https://hub.docker.com/api/content/v1/products/search"
         self.DockerHubSourceRepoQueryURL = 'https://hub.docker.com/api/build/v1/source/?image='
-        self.ImageNameCrawlerTaskURL= 'http://$your-webapp-url:8000/image_name_crawler_task/'
-        self.PostImageURL= 'http://$your-webapp-url:8000/create_image/'
-        self.PostDockerHubUserURL= 'http://$your-webapp-url:8000/dockerhub_user/'
+        self.ImageNameCrawlerTaskURL= 'http://localhost:8000/image_name_crawler_task/'
+        self.PostImageURL= 'http://localhost:8000/create_image/'
+        self.PostDockerHubUserURL= 'http://localhost:8000/dockerhub_user/'
         self.HEADER = {  
           'Host': 'hub.docker.com',
           'Connection': 'keep-alive',
@@ -35,8 +35,8 @@ class DockerImageMiner:
             'sort':'updated_at',
             'type':'image'
         }
-        
-    def search_url_generator(self, q, page, order, page_size=500):
+    
+    def search_url_generator(self, q, page, order, page_size=10):
         url = self.DockerHubSearchAPIURL + '?'
         if(order == 'desc'):
             search_parameters_dict = self.SEARCH_PARAMETERS.copy()
@@ -88,7 +88,7 @@ class DockerImageMiner:
                     query_url = self.search_url_generator(q = keyword, page = int(i/100+1), order = order, page_size=100)
                     res = query_session.get(query_url, headers = self.header_generator())
                     res_images_list += res.json()['summaries']
-                    time.sleep(1)
+                    # time.sleep(0.1)
                 images = [self.image_parser(item) for item in res_images_list]
                 dockerhubusers = [self.dockerhubuser_parser(item) for item in res_images_list]
                 r = requests.post(self.PostImageURL, json=images)
@@ -101,12 +101,12 @@ class DockerImageMiner:
                 new_keywords.append({'keyword':keyword, 'complete':True, 'image_count':image_count})
                 r = requests.post(self.ImageNameCrawlerTaskURL, json=new_keywords)
         except Exception as e:
-            r = requests.post(self.ImageNameCrawlerTaskURL, json=[{'keyword':keyword, 'complete':False, 'error_response':str(e)}])
+            r = requests.post(self.ImageNameCrawlerTaskURL, json=[{'keyword':keyword, 'complete':False, 'error_response':str(e)}]) 
             
     def run_task(self, order='desc'):
         while True:
             self.crawl_task(order)
-            time.sleep(4)
+            # time.sleep(0.1)
 
 if __name__== '__main__':
     order = os.getenv('ORDER')
