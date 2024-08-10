@@ -23,9 +23,9 @@ class Image(models.Model):
     full_description = models.TextField(blank=True, null=True)
     affiliation = models.CharField(max_length=32, blank=True, null=True)
     tags_count = models.IntegerField(blank=True, null=True)
-    tags = JSONField(blank=True, null=True)
+    tags = models.JSONField(default=list)
     builds_count = models.IntegerField(blank=True, null=True)
-    builds = JSONField(blank=True, null=True)
+    builds = models.JSONField(default=list)
     latest_dockerfile = models.TextField(blank=True, null=True)
     source_repo_id = models.IntegerField(blank=True, null=True)
     source_repo = models.CharField(max_length=512, blank=True, null=True)
@@ -35,8 +35,8 @@ class Image(models.Model):
     last_sent = models.DateTimeField(default=None, blank=True, null=True)
     complete = models.BooleanField(default=False, blank=True, null=True)
     error = models.BooleanField(default=False, blank=True, null=True)
-    response = JSONField(blank=True, null=True)
-    pagination = JSONField(blank=True, null=True, default=None)
+    response = models.JSONField(default=dict)
+    pagination = models.JSONField(default=dict)
 
 
     objects = CopyManager()
@@ -295,10 +295,10 @@ class Repository(models.Model):
     owner_id = models.CharField(max_length=64, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     fork = models.BooleanField(blank=True, null=True)
-    branches = JSONField(blank=True, null=True)
-    tags = JSONField(blank=True, null=True)
-    releases = JSONField(blank=True, null=True)
-    languages = JSONField(blank=True, null=True)
+    branches = models.JSONField(default=list)
+    tags = models.JSONField(default=list)
+    releases = models.JSONField(default=list)
+    languages = models.JSONField(default=dict)
     language = models.CharField(max_length=64, blank=True, null=True)
     created_at = models.DateTimeField(blank=True, null=True)
     updated_at = models.DateTimeField(blank=True, null=True)
@@ -306,7 +306,7 @@ class Repository(models.Model):
     homepage = models.CharField(max_length=512, blank=True, null=True)
     size = models.IntegerField(blank=True, null=True)
     commits_count = models.IntegerField(blank=True, null=True)
-    commits = JSONField(blank=True, null=True)
+    commits = models.JSONField(default=list)
     stargazers_count = models.IntegerField(blank=True, null=True)
     watchers_count = models.IntegerField(blank=True, null=True)
     has_issues = models.BooleanField(blank=True, null=True)
@@ -390,7 +390,7 @@ class Commit(models.Model):
     commit_id = models.AutoField(primary_key = True)
     commit_sha = models.CharField(max_length=128)
     repo_id = models.IntegerField(blank=False, null=False)
-    parents = JSONField(blank=True, null=True)
+    parents = models.JSONField(default=list)
     message = models.TextField(blank=True, null=True)
     author_username = models.CharField(max_length=64, blank=True, null=True)
     committer_username = models.CharField(max_length=64, blank=True, null=True)
@@ -402,7 +402,7 @@ class Commit(models.Model):
     stats_additions = models.IntegerField(blank=True, null=True)
     stats_deletions = models.IntegerField(blank=True, null=True)
     changed_file_count = models.IntegerField(blank=True, null=True)
-    changed_files = JSONField(blank=True, null=True)
+    changed_files = models.JSONField(default=dict)
     author_committed_at = models.DateTimeField(blank=True, null=True)
     committer_committed_at = models.DateTimeField(blank=True, null=True)
 
@@ -582,3 +582,27 @@ class AuthToken(models.Model):
             'limit_reset_time':self.limit_reset_time,
             'token_type':self.token_type
         }
+
+class GrypeScanResult(models.Model):
+    scan_timestamp = models.DateTimeField()
+    container_image = models.CharField(max_length=255)
+    os_name = models.CharField(max_length=50)
+    os_version = models.CharField(max_length=50)
+    vulnerability_id = models.CharField(max_length=50)
+    severity = models.CharField(max_length=20)
+    package_name = models.CharField(max_length=255)
+    package_version = models.CharField(max_length=100)
+    fix_state = models.CharField(max_length=50)
+    fix_versions = models.JSONField(default=list)  # Store as JSON array
+    cve_ids = models.JSONField(default=list)  # Store as JSON array
+    cvss_score = models.DecimalField(max_digits=3, decimal_places=1, null=True, blank=True)
+    cvss_vector = models.CharField(max_length=255, null=True, blank=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['container_image']),
+            models.Index(fields=['vulnerability_id']),
+            models.Index(fields=['severity']),
+            models.Index(fields=['package_name']),
+            models.Index(fields=['scan_timestamp']),
+        ]

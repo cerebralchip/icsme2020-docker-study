@@ -1,30 +1,51 @@
 import json
+import sys
+import os
 
-# Sample JSON data (replace this with the actual JSON data)
-# json_data = (write some code to load the file from a command line argument eg.author_project.json)
-json_data = 
+def parse_vulnerability(vulnerability, selected_fields):
+    details = {}
+    for field in selected_fields:
+        details[field] = vulnerability.get(field, None)
+    if 'relatedVulnerabilities' in selected_fields:
+        related_vulns = vulnerability.get('relatedVulnerabilities', [])
+        details['relatedVulnerabilities'] = [parse_vulnerability(rv, selected_fields) for rv in related_vulns]
+    return details
+
+# Check if the correct number of arguments is provided
+if len(sys.argv) != 2:
+    print("Usage: python jsonextractor.py <json_file>")
+    sys.exit(1)
+
+# Load the JSON file from the command line argument
+json_file = sys.argv[1]
+try:
+    with open(json_file, 'r') as file:
+        json_data = file.read()
+except FileNotFoundError:
+    print(f"File not found: {json_file}")
+    sys.exit(1)
 
 # Parse the JSON data
 data = json.loads(json_data)
 
-# Extract vulnerabilities
-vulnerabilities = data.get('vulnerabilities', [])
+# Extract matches
+matches = data.get('matches', [])
 
 # List to store parsed details
 parsed_details = []
 
-for vulnerability in vulnerabilities:
-    details = {
-        'id': vulnerability.get('id'),
-        'dataSource': vulnerability.get('dataSource'),
-        'namespace': vulnerability.get('namespace'),
-        'severity': vulnerability.get('severity'),
-        'urls': vulnerability.get('urls', []),
-        'fix': vulnerability.get('fix', {}),
-        'relatedVulnerabilities': vulnerability.get('relatedVulnerabilities', [])
-    }
-    parsed_details.append(details)
+# Define the fields you want to extract
+selected_fields = ['id', 'dataSource', 'namespace', 'severity', 'fix', 'relatedVulnerabilities']
 
-# Print parsed details
-for detail in parsed_details:
-    print(json.dumps(detail, indent=2))
+for match in matches:
+    vulnerability = match.get('vulnerability', {})
+    parsed_details.append(parse_vulnerability(vulnerability, selected_fields))
+
+# Generate the output file name
+output_file = f"processed_{os.path.basename(json_file)}"
+
+# Write parsed details to the output file
+with open(output_file, 'w') as file:
+    json.dump(parsed_details, file, indent=2)
+
+print(f"Processed data has been written to {output_file}")
