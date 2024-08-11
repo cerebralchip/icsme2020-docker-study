@@ -44,11 +44,16 @@ def create_image(request):
     elif(request.method == 'POST'):
         body_unicode = request.body.decode('utf-8')
         jsondata = json.loads(body_unicode)
+        updates = 0
         for item in jsondata:
-            Image.objects.get_or_create(image_name = item['image_name'], defaults = item)
+            _, response = Image.objects.update_or_create(image_name = item['image_name'], defaults = item)
+            #if response is False, then it is an update operation, so we increment the update count
+            if not response:
+                updates += 1
         return JsonResponse({
             'msg': 'OK!',
             'code': 200,
+            'updates': updates,
     })
 
 @csrf_exempt
