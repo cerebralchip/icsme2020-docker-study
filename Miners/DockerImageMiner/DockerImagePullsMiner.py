@@ -3,7 +3,6 @@ import json
 from fake_headers import Headers
 import time
 import string
-import itertools
 import os
 import time
 
